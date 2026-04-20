@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum ServiceCategory {
+  NIN
+  BVN
+  AIRTIME
+  DATA
+}
+
+enum RequestStatus {
+  PENDING
+  COMPLETED
+  REJECTED
+}
+
+enum WalletTransactionType {
+  CREDIT
+  DEBIT
+  REFUND
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  firstName    String     @map("first_name")
+  lastName     String     @map("last_name")
+  phone        String?
+  role         Role       @default(USER)
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  wallet             Wallet?
+  serviceRequests    ServiceRequest[]
+  walletTransactions WalletTransaction[]
+  notifications      Notification[]
+  resetTokens        PasswordResetToken[]
+
+  @@map("users")
+}
+
+model Wallet {
+  id      String  @id @default(uuid())
+  userId  String  @unique @map("user_id")
+  balance Decimal @default(0) @db.Decimal(15, 2)
+
+  virtualAccountNumber String? @map("virtual_account_number")
+  virtualAccountBank   String? @map("virtual_account_bank")
+  virtualAccountName   String? @map("virtual_account_name")
+  virtualAccountRef    String? @unique @map("virtual_account_ref")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wallets")
+}
+
+model Service {
+  id        String          @id @default(uuid())
+  name      String          @unique
+  slug      String          @unique
+  category  ServiceCategory
+  price     Decimal         @db.Decimal(10, 2)
+  isEnabled Boolean         @default(true) @map("is_enabled")
+
+  serviceRequests ServiceRequest[]
+
+  @@map("services")
+}
+
+model ServiceRequest {
+  id            String        @id @default(uuid())
+  userId        String        @map("user_id")
+  serviceId     String        @map("service_id")
+  reference     String        @unique
+  status        RequestStatus @default(PENDING)
+  formData      Json          @map("form_data")
+  adminResponse Json?         @map("admin_response")
+  amount        Decimal       @db.Decimal(10, 2)
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  service Service @relation(fields: [serviceId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("service_requests")
+}
+
+model WalletTransaction {
+  id           String                @id @default(uuid())
+  userId       String                @map("user_id")
+  type         WalletTransactionType
+  amount       Decimal               @db.Decimal(10, 2)
+  balanceAfter Decimal               @db.Decimal(10, 2) @map("balance_after")
+  reference    String                @unique
+  description  String
+  createdAt    DateTime              @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("wallet_transactions")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String
+  body      String
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}

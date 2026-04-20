@@ -1,0 +1,48 @@
+version: '3.9'
+
+# ─── Test Infrastructure ──────────────────────────────────────────────────────
+# Provides isolated PostgreSQL and Redis instances for integration tests.
+# Usage:
+#   docker compose -f docker-compose.test.yml up -d
+#   TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5433/getidfix_test \
+#   REDIS_URL=redis://localhost:6380 \
+#   npx jest --config jest.integration.config.js
+#   docker compose -f docker-compose.test.yml down -v
+
+services:
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: getidfix_postgres_test
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: getidfix_test
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d getidfix_test']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: getidfix_redis_test
+    ports:
+      - '6380:6379'
+    command: redis-server --save '' --appendonly no
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  postgres_test_data:
+    driver: local
