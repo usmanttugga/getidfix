@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle, AlertCircle, Upload, X, FileText } from 'lucide-react';
+import { CheckCircle, AlertCircle } from 'lucide-react';
 import api from '../../../../../lib/api';
 
 const inputCls = 'w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-400';
@@ -16,11 +16,9 @@ export default function AddressModificationPage() {
     stateOfOrigin: '', lgaOfOrigin: '',
     stateOfResidence: '', lgaOfResidence: '',
   });
-  const [documents, setDocuments] = useState<File[]>([]);
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState('');
   const [success, setSuccess]     = useState<{ reference: string } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient  = useQueryClient();
 
   const { data: walletData }   = useQuery({ queryKey: ['wallet'],   queryFn: () => api.get('/wallet').then((r) => r.data.data) });
@@ -33,15 +31,6 @@ export default function AddressModificationPage() {
   const serviceDisabled = servicesData !== undefined && !service;
   const set = (f: string, v: string) => setForm((p) => ({ ...p, [f]: v }));
 
-  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.some((f) => f.size > 5 * 1024 * 1024)) { setError('Each file must not exceed 5MB.'); return; }
-    setDocuments((prev) => { const ex = new Set(prev.map((f) => f.name)); return [...prev, ...files.filter((f) => !ex.has(f.name))]; });
-    setError(''); if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const removeFile = (i: number) => setDocuments((prev) => prev.filter((_, idx) => idx !== i));
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError('');
     if (!form.nin.trim())              { setError('NIN is required.'); return; }
@@ -52,15 +41,9 @@ export default function AddressModificationPage() {
     if (!form.lgaOfOrigin.trim())      { setError('LGA of Origin is required.'); return; }
     if (!form.stateOfResidence.trim()) { setError('State of Residence is required.'); return; }
     if (!form.lgaOfResidence.trim())   { setError('LGA of Residence is required.'); return; }
-    if (documents.length === 0)        { setError('Please upload at least one supporting document.'); return; }
     setLoading(true);
     try {
-      const docsBase64 = await Promise.all(documents.map((file) =>
-        new Promise<{ name: string; type: string; data: string }>((res, rej) => {
-          const r = new FileReader(); r.onload = () => res({ name: file.name, type: file.type, data: r.result as string }); r.onerror = rej; r.readAsDataURL(file);
-        })
-      ));
-      const formData = { ...form, documents: docsBase64 };
+      const formData = { ...form };
       const res = await api.post('/requests', { serviceSlug: 'nin-modification-address', formData });
       setSuccess({ reference: res.data.data.reference });
       queryClient.invalidateQueries({ queryKey: ['requests', 'by-service', 'nin-modification'] });
@@ -72,7 +55,6 @@ export default function AddressModificationPage() {
 
   const reset = () => {
     setSuccess(null);
-    setDocuments([]);
     setForm({ nin: '', address: '', townCity: '', stateOfOrigin: '', lgaOfOrigin: '', stateOfResidence: '', lgaOfResidence: '' });
   };
 
@@ -112,7 +94,7 @@ export default function AddressModificationPage() {
     <div className="max-w-lg">
       <div className="bg-white rounded-xl border border-slate-300 p-6">
         <h1 className="text-xl font-semibold text-slate-900 mb-1">NIN Modification — Address</h1>
-        <p className="text-sm text-slate-500 mb-5">Fill in your address details and upload supporting documents.</p>
+        <p className="text-sm text-slate-500 mb-5">Fill in your address details to submit a modification request.</p>
 
         <div className="py-3 border-b border-slate-200 mb-5">
           <p className="text-xs text-slate-500">Service Fee</p>
@@ -174,33 +156,6 @@ export default function AddressModificationPage() {
                 <input type="text" value={form.lgaOfResidence} onChange={(e) => set('lgaOfResidence', e.target.value)} placeholder="e.g. Ikeja" className={inputCls} />
               </div>
             </div>
-          </div>
-
-          {/* DOCUMENT UPLOAD */}
-          <div className={sectionCls}>
-            <p className={sectionTitleCls}>Document Upload</p>
-            <p className="text-xs text-slate-400 mb-2">Upload supporting documents (PDF, JPG, PNG). Max 5MB each. Multiple files allowed.</p>
-            {documents.length > 0 && (
-              <div className="space-y-2 mb-3">
-                {documents.map((file, index) => (
-                  <div key={index} className="flex items-center gap-3 p-2.5 bg-green-50 border border-green-200 rounded-lg">
-                    <FileText size={16} className="text-green-600 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-800 truncate">{file.name}</p>
-                      <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
-                    </div>
-                    <button type="button" onClick={() => removeFile(index)} className="p-1 hover:bg-green-100 rounded"><X size={14} className="text-slate-500" /></button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <button type="button" onClick={() => fileInputRef.current?.click()}
-              className="w-full flex flex-col items-center gap-2 p-5 border-2 border-dashed border-slate-300 rounded-lg hover:border-slate-500 hover:bg-blue-50 transition-colors">
-              <Upload size={22} className="text-slate-400" />
-              <span className="text-sm text-slate-500">{documents.length > 0 ? 'Add more documents' : 'Click to upload documents'}</span>
-              <span className="text-xs text-slate-400">PDF, JPG, PNG — Max 5MB each</span>
-            </button>
-            <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" multiple onChange={handleFiles} className="hidden" />
           </div>
 
           <button type="submit" disabled={loading || !canAfford}

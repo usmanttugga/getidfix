@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { getPrismaClient } from '../config/prisma';
 import { authenticate } from '../middleware/auth';
@@ -21,15 +22,61 @@ const ninVerifySchema = z.object({
   dob:       z.string().optional(),
 });
 
-// ─── NIMC Stub ────────────────────────────────────────────────────────────────
+// ─── VerifyMe API ─────────────────────────────────────────────────────────────
 
-async function callNimcApi(_nin: string) {
-  // Stub: return mock identity data
+const VERIFYME_BASE = 'https://vapi.verifyme.ng/v1/verifications/identities';
+
+function verifyMeHeaders() {
   return {
-    fullName: 'John Doe',
-    dob:      '1990-01-01',
-    gender:   'Male',
-    photo:    null,
+    Authorization: `Bearer ${process.env.VERIFYME_API_KEY}`,
+    'Content-Type': 'application/json',
+  };
+}
+
+async function callNimcApi(method: string, params: {
+  nin?: string; phone?: string; vnin?: string;
+  firstName?: string; lastName?: string; dob?: string;
+}) {
+  let url = '';
+  let body: Record<string, string> = {};
+
+  const ref = params.nin || params.phone || params.vnin || 'test';
+
+  if (method === 'nin') {
+    url = `${VERIFYME_BASE}/nin/${ref}`;
+    body = {
+      ...(params.firstName && { firstname: params.firstName }),
+      ...(params.lastName  && { lastname:  params.lastName  }),
+      ...(params.dob       && { dob:       params.dob       }),
+    };
+  } else if (method === 'phone') {
+    url = `${VERIFYME_BASE}/nin_phone/${ref}`;
+  } else if (method === 'vnin') {
+    url = `${VERIFYME_BASE}/vnin/${ref}`;
+  } else if (method === 'dob') {
+    // Bio data — use NIN endpoint with name + dob matching
+    url = `${VERIFYME_BASE}/nin/${ref}`;
+    body = {
+      ...(params.firstName && { firstname: params.firstName }),
+      ...(params.lastName  && { lastname:  params.lastName  }),
+      ...(params.dob       && { dob:       params.dob       }),
+    };
+  }
+
+  const response = await axios.post(url, body, { headers: verifyMeHeaders() });
+  const data = response.data?.data;
+  if (!data) throw new Error('No data returned from VerifyMe');
+
+  return {
+    fullName:  `${data.firstname || ''} ${data.middlename || ''} ${data.lastname || ''}`.trim(),
+    firstName: data.firstname  || '',
+    lastName:  data.lastname   || '',
+    middleName:data.middlename || '',
+    dob:       data.birthdate  || '',
+    gender:    data.gender     || '',
+    phone:     data.phone      || '',
+    photo:     data.photo      || null,
+    nin:       String(data.nin || ''),
   };
 }
 
@@ -57,12 +104,24 @@ router.post('/verify', authenticate, async (req: Request, res: Response, next: N
       throw new AppError('Insufficient wallet balance.', 400, ERROR_CODES.INSUFFICIENT_BALANCE);
     }
 
-    // Call NIMC API stub — do NOT debit if this fails
+    // Call VerifyMe API — do NOT debit if this fails
     let nimcResult;
     try {
-      nimcResult = await callNimcApi(body.nin || body.phone || body.vnin || '');
-    } catch {
-      throw new AppError('NIMC API is currently unavailable. Please try again later.', 502, ERROR_CODES.EXTERNAL_API_ERROR);
+      nimcResult = await callNimcApi(body.method, {
+        nin:       body.nin,
+        phone:     body.phone,
+        vnin:      body.vnin,
+        firstName: body.firstName,
+        lastName:  body.lastName,
+        dob:       body.dob,
+      });
+    } catch (err: unknown) {
+      const apiMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      throw new AppError(
+        apiMsg || 'NIN verification failed. Please check the details and try again.',
+        502,
+        ERROR_CODES.EXTERNAL_API_ERROR
+      );
     }
 
     const reference = uuidv4();

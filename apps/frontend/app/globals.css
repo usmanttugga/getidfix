@@ -30,6 +30,11 @@ body {
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
+/* Safe area for iOS bottom bar */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* Primary button override — deep navy */
 .bg-\[#0F4C81\] {
   background-color: #0D2137 !important;

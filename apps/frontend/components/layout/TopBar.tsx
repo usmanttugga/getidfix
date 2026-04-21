@@ -18,12 +18,14 @@ export function TopBar() {
 
   return (
     <header className="h-14 bg-[#0D2137] border-b border-[#1a3550] flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30 shadow-sm">
-      <div className="flex items-center gap-2 lg:hidden">
-        {/* Space for mobile menu button */}
-        <div className="w-8" />
+      {/* Logo on mobile — sidebar hidden */}
+      <div className="flex items-center lg:hidden">
+        <span className="font-extrabold text-base tracking-tight text-white">
+          GET<span style={{ color: '#C9A84C' }}>[ID]</span>FIX
+        </span>
       </div>
 
-      <div className="flex-1" />
+      <div className="hidden lg:block flex-1" />
 
       <div className="flex items-center gap-3">
         {/* Notification bell */}
