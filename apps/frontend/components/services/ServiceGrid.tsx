@@ -1,7 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Shield, CreditCard, Smartphone, Wifi } from 'lucide-react';
+import { BouncingLoader } from '../ui/BouncingLoader';
 
 interface Service {
   id: string;
@@ -114,6 +116,12 @@ const CATEGORY_PARENT_CARDS: Record<string, ParentCard[]> = {
 
 export function ServiceGrid({ services }: ServiceGridProps) {
   const router = useRouter();
+  const [navigating, setNavigating] = useState(false);
+
+  const navigate = (route: string) => {
+    setNavigating(true);
+    router.push(route);
+  };
 
   if (services.length === 0) {
     return (
@@ -140,6 +148,8 @@ export function ServiceGrid({ services }: ServiceGridProps) {
 
   return (
     <div className="space-y-6">
+      {/* Bouncing logo loader overlay */}
+      {navigating && <BouncingLoader message="Loading service..." />}
       {CATEGORY_DISPLAY_ORDER.filter(categoryHasServices).map((category) => {
         const config = CATEGORY_CONFIG[category] || {
           label: category, icon: null, color: 'bg-slate-50 text-slate-700 border-slate-300',
@@ -149,16 +159,16 @@ export function ServiceGrid({ services }: ServiceGridProps) {
 
         // Card background colors per category
         const cardColors: Record<string, string> = {
-          NIN:    'bg-slate-100 border-slate-300 hover:bg-slate-200 hover:border-[#0D2137]/35 hover:shadow-md',
-          BVN:    'bg-violet-50 border-violet-200 hover:bg-violet-100 hover:border-violet-300 hover:shadow-md',
-          AIRTIME:'bg-emerald-50 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 hover:shadow-md',
-          DATA:   'bg-sky-50 border-sky-200 hover:bg-sky-100 hover:border-sky-300 hover:shadow-md',
+          NIN:    'bg-gradient-to-br from-[#0D2137]/5 to-[#0D2137]/10 border-2 border-slate-300 hover:from-[#0D2137]/10 hover:to-[#0D2137]/20 hover:border-slate-400 hover:shadow-md',
+          BVN:    'bg-gradient-to-br from-[#0D2137]/5 to-[#0D2137]/10 border-2 border-slate-300 hover:from-[#0D2137]/10 hover:to-[#0D2137]/20 hover:border-slate-400 hover:shadow-md',
+          AIRTIME:'bg-gradient-to-br from-[#0D2137]/5 to-[#0D2137]/10 border-2 border-slate-300 hover:from-[#0D2137]/10 hover:to-[#0D2137]/20 hover:border-slate-400 hover:shadow-md',
+          DATA:   'bg-gradient-to-br from-[#0D2137]/5 to-[#0D2137]/10 border-2 border-slate-300 hover:from-[#0D2137]/10 hover:to-[#0D2137]/20 hover:border-slate-400 hover:shadow-md',
         };
         const labelColors: Record<string, string> = {
-          NIN: 'text-[#0D2137]', BVN: 'text-violet-800', AIRTIME: 'text-emerald-800', DATA: 'text-sky-800',
+          NIN: 'text-[#0D2137]', BVN: 'text-[#0D2137]', AIRTIME: 'text-[#0D2137]', DATA: 'text-[#0D2137]',
         };
         const descColors: Record<string, string> = {
-          NIN: 'text-[#0D2137]/50', BVN: 'text-violet-500', AIRTIME: 'text-emerald-600', DATA: 'text-sky-600',
+          NIN: 'text-slate-500', BVN: 'text-slate-500', AIRTIME: 'text-slate-500', DATA: 'text-slate-500',
         };
         const cardCls = cardColors[category] || 'bg-slate-50 border-slate-300 hover:shadow-md';
         const labelCls = labelColors[category] || 'text-slate-800';
@@ -185,12 +195,12 @@ export function ServiceGrid({ services }: ServiceGridProps) {
                 return (
                   <button
                     key={card.key}
-                    onClick={() => router.push(card.route)}
+                    onClick={() => navigate(card.route)}
                     className={`border rounded-xl p-4 text-left transition-all ${cardCls}`}
                   >
                     <p className={`text-sm font-semibold mb-1 ${labelCls}`}>{card.label}</p>
                     <p className={`text-xs leading-relaxed mb-2 ${descCls}`}>{card.description}</p>
-                    {priceLabel && <p className="text-xs font-semibold text-[#C9A84C]">{priceLabel}</p>}
+                    {priceLabel && <p className="text-xs font-bold text-[#0D2137] mt-1">{priceLabel}</p>}
                   </button>
                 );
               })}

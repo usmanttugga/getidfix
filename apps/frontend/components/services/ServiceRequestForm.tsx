@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 import api from '../../lib/api';
 import { ServiceHistory } from './ServiceHistory';
+import { BouncingLoader } from '../ui/BouncingLoader';
 
 export interface FieldConfig {
   name: string;
@@ -129,6 +130,7 @@ export function ServiceRequestForm({ serviceSlug, serviceName, fields, hideHisto
 
   return (
     <div className="space-y-0">
+      {loading && <BouncingLoader message="Submitting request..." />}
       <div className="max-w-lg mx-auto">
         <div className="bg-white rounded-xl border border-slate-300 p-6">
         <h1 className="text-xl font-semibold text-[#0D2137] mb-1">{serviceName}</h1>

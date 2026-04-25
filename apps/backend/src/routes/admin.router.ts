@@ -322,18 +322,26 @@ const fundUserSchema = z.object({
 router.post('/users/:id/fund', async (req: Request, res: Response, next: NextFunction) => {
   const prisma = getPrismaClient();
   try {
+    console.log('[Admin Fund] Request body:', req.body);
+    console.log('[Admin Fund] User ID:', req.params.id);
+    
     const { amount, description } = fundUserSchema.parse(req.body);
+    console.log('[Admin Fund] Parsed amount:', amount, 'description:', description);
 
     const user = await prisma.user.findUnique({
       where: { id: req.params.id },
       include: { wallet: true },
     });
+    console.log('[Admin Fund] User found:', user ? `${user.firstName} ${user.lastName}` : 'NOT FOUND');
+    console.log('[Admin Fund] Wallet exists:', !!user?.wallet);
+    
     if (!user)        throw new AppError('User not found.', 404, ERROR_CODES.USER_NOT_FOUND);
     if (!user.wallet) throw new AppError('User wallet not found.', 404, ERROR_CODES.WALLET_NOT_FOUND);
 
     const { creditWallet } = await import('../services/wallet.service');
     const { v4: uuidv4 }   = await import('uuid');
 
+    console.log('[Admin Fund] Starting transaction...');
     const newBalance = await prisma.$transaction(async (tx) => {
       return creditWallet(
         tx as unknown as Parameters<typeof creditWallet>[0],
@@ -343,6 +351,7 @@ router.post('/users/:id/fund', async (req: Request, res: Response, next: NextFun
         `admin-fund-${uuidv4()}`
       );
     });
+    console.log('[Admin Fund] Transaction complete. New balance:', Number(newBalance));
 
     await createNotification(
       prisma as unknown as Parameters<typeof createNotification>[0],
@@ -356,6 +365,7 @@ router.post('/users/:id/fund', async (req: Request, res: Response, next: NextFun
       data: { newBalance: Number(newBalance), message: `Successfully credited ₦${amount.toLocaleString()} to ${user.firstName}'s wallet.` },
     });
   } catch (err) {
+    console.error('[Admin Fund] Error:', err);
     next(err);
   }
 });

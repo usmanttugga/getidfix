@@ -12,9 +12,8 @@ export default function SupportPage() {
 
   const companyName  = data?.companyName  || '';
   const supportEmail = data?.supportEmail || '';
-  const supportPhone = data?.supportPhone || '';
 
-  const hasAny = companyName || supportEmail || supportPhone;
+  const hasAny = companyName || supportEmail;
 
   return (
     <div className="max-w-lg space-y-6">
@@ -55,30 +54,8 @@ export default function SupportPage() {
               </div>
               <div>
                 <p className="text-xs text-slate-500 mb-0.5">Email</p>
-                <a
-                  href={`mailto:${supportEmail}`}
-                  className="font-semibold text-[#C9A84C] hover:underline"
-                >
+                <a href={`mailto:${supportEmail}`} className="font-semibold text-[#C9A84C] hover:underline">
                   {supportEmail}
-                </a>
-              </div>
-            </div>
-          )}
-
-          {supportPhone && (
-            <div className="flex items-center gap-4 px-5 py-4">
-              <div className="p-2.5 bg-emerald-50 rounded-xl shrink-0">
-                <MessageCircle size={20} className="text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-0.5">WhatsApp</p>
-                <a
-                  href={`https://wa.me/${supportPhone.replace(/[\s+\-()]/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-[#C9A84C] hover:underline"
-                >
-                  Chat on WhatsApp
                 </a>
               </div>
             </div>

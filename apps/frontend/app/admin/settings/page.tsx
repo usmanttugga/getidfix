@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Save, Building2, Mail, Phone } from 'lucide-react';
+import { Save, Building2, Mail, Phone, MessageCircle } from 'lucide-react';
 import api from '../../../lib/api';
 
 export default function AdminSettingsPage() {
   const queryClient = useQueryClient();
 
   const [form, setForm] = useState({
-    companyName:  '',
-    supportEmail: '',
-    supportPhone: '',
+    companyName:       '',
+    supportEmail:      '',
+    supportPhone:      '',
+    whatsappGroupLink: '',
   });
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
@@ -24,9 +25,10 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     if (data) {
       setForm({
-        companyName:  data.companyName  || '',
-        supportEmail: data.supportEmail || '',
-        supportPhone: data.supportPhone || '',
+        companyName:       data.companyName       || '',
+        supportEmail:      data.supportEmail      || '',
+        supportPhone:      data.supportPhone      || '',
+        whatsappGroupLink: data.whatsappGroupLink || '',
       });
     }
   }, [data]);
@@ -100,7 +102,7 @@ export default function AdminSettingsPage() {
             {/* Support Phone */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1.5">
-                <Phone size={14} className="text-slate-400" /> Phone Number (Call / WhatsApp)
+                <Phone size={14} className="text-slate-400" /> Phone Number (Call)
               </label>
               <input
                 type="text"
@@ -109,7 +111,21 @@ export default function AdminSettingsPage() {
                 placeholder="e.g. +234 800 000 0000"
                 className={inputCls}
               />
-              <p className="text-xs text-slate-400 mt-1">This number will be shown for both calls and WhatsApp.</p>
+            </div>
+
+            {/* WhatsApp Group Link */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1.5">
+                <MessageCircle size={14} className="text-emerald-500" /> WhatsApp Group Link
+              </label>
+              <input
+                type="url"
+                value={form.whatsappGroupLink}
+                onChange={(e) => setForm((p) => ({ ...p, whatsappGroupLink: e.target.value }))}
+                placeholder="e.g. https://chat.whatsapp.com/xxxxxx"
+                className={inputCls}
+              />
+              <p className="text-xs text-slate-400 mt-1">Users will click this to join your WhatsApp group.</p>
             </div>
 
             <div className="pt-2 flex items-center gap-3">

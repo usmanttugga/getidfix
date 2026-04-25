@@ -6,6 +6,7 @@ import { CheckCircle, User, AlertCircle, Phone } from 'lucide-react';
 import Link from 'next/link';
 import api from '../../../../../lib/api';
 import { SlipTypeModal, type SlipType } from '../../../../../components/SlipTypeModal';
+import { BouncingLoader } from '../../../../../components/ui/BouncingLoader';
 
 export default function VerifyByPhonePage() {
   const [slipType, setSlipType]     = useState<SlipType | null>(null);
@@ -13,6 +14,7 @@ export default function VerifyByPhonePage() {
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState('');
   const [result, setResult]         = useState<Record<string, unknown> | null>(null);
+  const [pending, setPending]       = useState(false);
 
   const { data: walletData } = useQuery({
     queryKey: ['wallet'],
@@ -37,7 +39,11 @@ export default function VerifyByPhonePage() {
     setLoading(true);
     try {
       const res = await api.post('/nin/verify', { method: 'phone', phone, slipType });
-      setResult(res.data.data);
+      if (res.data.data?.pending) {
+        setPending(true);
+      } else {
+        setResult(res.data.data);
+      }
       queryClient.invalidateQueries({ queryKey: ['requests', 'by-service', 'nin-verification'] });
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
@@ -53,6 +59,23 @@ export default function VerifyByPhonePage() {
           <h2 className="text-xl font-semibold text-slate-900 mb-2">Service Unavailable</h2>
           <p className="text-slate-500 mb-4">NIN Verification is currently disabled. Please check back later.</p>
           <Link href="/dashboard" className="inline-block px-4 py-2 bg-[#0D2137] text-white rounded-lg text-sm hover:bg-[#0f2d4a]">Back to Dashboard</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (pending) {
+    return (
+      <div className="max-w-lg">
+        <div className="bg-white rounded-xl border border-slate-300 p-6 text-center">
+          <CheckCircle size={48} className="mx-auto mb-4 text-[#C9A84C]" />
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Request Submitted</h2>
+          <p className="text-slate-500 mb-4">Your NIN verification by phone number has been submitted. Our team will process it and you will be notified once complete.</p>
+          <p className="text-xs text-slate-400 mb-5">Phone: {phone}</p>
+          <div className="flex gap-3">
+            <button onClick={() => { setPending(false); setPhone(''); setSlipType(null); }} className="flex-1 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm hover:bg-slate-50">Submit Another</button>
+            <Link href="/dashboard" className="flex-1 py-2 bg-[#0D2137] text-white rounded-lg text-sm font-medium hover:bg-[#0f2d4a] text-center">Back to Dashboard</Link>
+          </div>
         </div>
       </div>
     );
@@ -102,6 +125,7 @@ export default function VerifyByPhonePage() {
 
   return (
     <div className="max-w-lg">
+      {loading && <BouncingLoader message="Verifying..." />}
       <div className="bg-white rounded-xl border border-slate-300 p-6">
         <div className="flex items-center gap-2 mb-1">
           <div className="p-2 bg-green-50 rounded-lg"><Phone size={18} className="text-green-600" /></div>

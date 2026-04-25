@@ -79,3 +79,12 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: #1A202C !important;
   caret-color: #1A202C;
 }
+
+/* ── Ensure all inputs support copy/paste and user interaction ── */
+input,
+textarea,
+select {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  pointer-events: auto !important;
+}

@@ -21,6 +21,10 @@ const envSchema = z.object({
   SMTP_PASS: z.string().default(''),
 
   FRONTEND_URL: z.string().default('http://localhost:3000'),
+
+  VERIFYME_CLIENT_ID: z.string().default(''),
+  VERIFYME_API_KEY:   z.string().min(1, 'VERIFYME_API_KEY is required'),
+  LUMIID_API_KEY:   z.string().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;

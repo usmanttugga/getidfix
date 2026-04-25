@@ -6,6 +6,7 @@ import { CheckCircle, User, AlertCircle, Fingerprint } from 'lucide-react';
 import Link from 'next/link';
 import api from '../../../../../lib/api';
 import { SlipTypeModal, type SlipType } from '../../../../../components/SlipTypeModal';
+import { BouncingLoader } from '../../../../../components/ui/BouncingLoader';
 
 export default function VerifyByVNINPage() {
   const [slipType, setSlipType]     = useState<SlipType | null>(null);
@@ -102,6 +103,7 @@ export default function VerifyByVNINPage() {
 
   return (
     <div className="max-w-lg">
+      {loading && <BouncingLoader message="Verifying..." />}
       <div className="bg-white rounded-xl border border-slate-300 p-6">
         <div className="flex items-center gap-2 mb-1">
           <div className="p-2 bg-purple-50 rounded-lg"><Fingerprint size={18} className="text-purple-600" /></div>

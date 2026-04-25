@@ -20,9 +20,11 @@ const CATEGORY_COLORS: Record<string, string> = {
   DATA:   'bg-teal-50 border-teal-200 text-teal-800',
 };
 
-function authHeaders() {
+function authHeaders(): Record<string, string> {
   const token = getAccessToken();
-  return token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
 }
 
 export default function AdminAvailabilityPage() {

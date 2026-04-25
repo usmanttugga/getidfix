@@ -13,8 +13,12 @@ interface ServiceSeed {
 }
 
 const SERVICES: ServiceSeed[] = [
-  // NIN Verification (automated - NIMC API)
+  // NIN Verification (automated - LumiID API) — slip-type variants
   { name: 'NIN Verification',                    slug: 'nin-verification',                    category: ServiceCategory.NIN,    price: 500  },
+  { name: 'NIN Verification - Basic',            slug: 'nin-verification-basic',              category: ServiceCategory.NIN,    price: 500  },
+  { name: 'NIN Verification - Standard',         slug: 'nin-verification-standard',           category: ServiceCategory.NIN,    price: 700  },
+  { name: 'NIN Verification - Regular',          slug: 'nin-verification-regular',            category: ServiceCategory.NIN,    price: 700  },
+  { name: 'NIN Verification - Premium',          slug: 'nin-verification-premium',            category: ServiceCategory.NIN,    price: 1000 },
   { name: 'NIN Verification - VNIN',             slug: 'nin-verification-vnin',               category: ServiceCategory.NIN,    price: 500  },
 
   // NIN Validation sub-services

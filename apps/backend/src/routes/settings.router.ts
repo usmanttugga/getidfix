@@ -5,7 +5,7 @@ import { authenticate, requireAdmin } from '../middleware/auth';
 
 const router = Router();
 
-const SUPPORT_KEYS = ['companyName', 'supportEmail', 'supportPhone'];
+const SUPPORT_KEYS = ['companyName', 'supportEmail', 'supportPhone', 'whatsappGroupLink'];
 
 // ─── GET /settings/support (public — users can read) ─────────────────────────
 
@@ -25,9 +25,10 @@ router.get('/support', async (_req: Request, res: Response, next: NextFunction) 
 // ─── PATCH /settings/support (admin only) ────────────────────────────────────
 
 const supportSchema = z.object({
-  companyName:  z.string().min(1).optional(),
-  supportEmail: z.string().email().optional(),
-  supportPhone: z.string().min(7).optional(),
+  companyName:        z.string().min(1).optional(),
+  supportEmail:       z.string().email().optional(),
+  supportPhone:       z.string().min(7).optional(),
+  whatsappGroupLink:  z.string().url().optional(),
 });
 
 router.patch('/support', authenticate, requireAdmin, async (req: Request, res: Response, next: NextFunction) => {

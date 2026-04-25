@@ -5,7 +5,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 import api from '../../../lib/api';
 import { ServiceHistory } from '../../../components/services/ServiceHistory';
-import { ServiceHistory } from '../../../components/services/ServiceHistory';
 
 const NETWORKS = ['MTN', 'Airtel', 'Glo', '9mobile'] as const;
 

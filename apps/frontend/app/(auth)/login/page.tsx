@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { GetIdfixLogo } from '../../../components/brand/GetIdfixLogo';
+import { BouncingLoader } from '../../../components/ui/BouncingLoader';
 import { useAuth } from '../../../contexts/AuthContext';
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
@@ -39,6 +40,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function LoginPage() {
   const [tab, setTab]       = useState<'login' | 'register'>('login');
   const [error, setError]   = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [showLoginPwd, setShowLoginPwd]     = useState(false);
   const [showRegPwd, setShowRegPwd]         = useState(false);
   const [showRegConfirmPwd, setShowRegConfirmPwd] = useState(false);
@@ -50,6 +52,7 @@ export default function LoginPage() {
 
   const handleLogin = async (data: LoginForm) => {
     setError('');
+    setIsLoading(true);
     try {
       await login(data.email, data.password);
       const user = JSON.parse(localStorage.getItem('getidfix_user') || '{}');
@@ -57,22 +60,30 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
       setError(msg || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleRegister = async (data: RegisterForm) => {
     setError('');
+    setIsLoading(true);
     try {
       await register({ firstName: data.firstName, lastName: data.lastName, email: data.email, phone: data.phone, password: data.password });
       router.push('/dashboard');
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
       setError(msg || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0D2137] via-[#0f2d4a] to-[#091929] px-4">
+      {/* Bouncing logo loader overlay */}
+      {isLoading && <BouncingLoader message="Please wait..." />}
+
       {/* Geometric background pattern */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-[#C9A84C]/10 opacity-40" />
@@ -153,10 +164,10 @@ export default function LoginPage() {
               </div>
               <button
                 type="submit"
-                disabled={loginForm.formState.isSubmitting}
+                disabled={loginForm.formState.isSubmitting || isLoading}
                 className="w-full py-2.5 bg-[#C9A84C] text-[#0D2137] rounded-lg text-sm font-semibold hover:bg-[#d4b55e] transition-colors disabled:opacity-60"
               >
-                {loginForm.formState.isSubmitting ? 'Signing in...' : 'Sign In'}
+                {isLoading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>
           )}
@@ -258,10 +269,10 @@ export default function LoginPage() {
               </div>
               <button
                 type="submit"
-                disabled={regForm.formState.isSubmitting}
+                disabled={regForm.formState.isSubmitting || isLoading}
                 className="w-full py-2.5 bg-[#C9A84C] text-[#0D2137] rounded-lg text-sm font-semibold hover:bg-[#d4b55e] transition-colors disabled:opacity-60"
               >
-                {regForm.formState.isSubmitting ? 'Creating account...' : 'Create Account'}
+                {isLoading ? 'Creating account...' : 'Create Account'}
               </button>
             </form>
           )}

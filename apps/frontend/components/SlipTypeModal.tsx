@@ -75,7 +75,7 @@ export function SlipTypeModal({ onSelect, onClose }: SlipTypeModalProps) {
                       {opt.name}
                     </p>
                     {price !== null ? (
-                      <span className="text-xs font-bold text-[#C9A84C] shrink-0">₦{price.toLocaleString()}</span>
+                      <span className="text-xs font-bold text-[#0D2137] shrink-0">₦{price.toLocaleString()}</span>
                     ) : (
                       <span className="text-xs text-slate-400 shrink-0">—</span>
                     )}

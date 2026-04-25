@@ -1,8 +1,10 @@
 'use client';
 
-import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Hash, Phone, Calendar, Fingerprint } from 'lucide-react';
 import { ServiceHistory } from '../../../../components/services/ServiceHistory';
+import { BouncingLoader } from '../../../../components/ui/BouncingLoader';
 
 const methods = [
   {
@@ -36,8 +38,18 @@ const methods = [
 ];
 
 export default function NINVerifyPage() {
+  const router = useRouter();
+  const [navigating, setNavigating] = useState(false);
+
+  const navigate = (href: string) => {
+    setNavigating(true);
+    router.push(href);
+  };
+
   return (
     <div>
+      {navigating && <BouncingLoader message="Loading service..." />}
+
       <div className="max-w-2xl mb-6">
         <h1 className="text-2xl font-bold text-slate-900">NIN Verification</h1>
         <p className="text-slate-500 text-sm mt-1">
@@ -47,10 +59,10 @@ export default function NINVerifyPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
         {methods.map((m) => (
-          <Link
+          <button
             key={m.href}
-            href={m.href}
-            className="bg-gradient-to-br from-[#0D2137]/5 to-[#0D2137]/10 border border-slate-300 rounded-xl p-5 hover:from-[#0D2137]/10 hover:to-[#0D2137]/20 hover:border-slate-400 hover:shadow-md transition-all group flex items-start gap-4"
+            onClick={() => navigate(m.href)}
+            className="bg-gradient-to-br from-[#0D2137]/5 to-[#0D2137]/10 border border-slate-300 rounded-xl p-5 hover:from-[#0D2137]/10 hover:to-[#0D2137]/20 hover:border-slate-400 hover:shadow-md transition-all group flex items-start gap-4 text-left w-full"
           >
             <div className={`p-3 rounded-xl ${m.iconBg} shrink-0`}>{m.icon}</div>
             <div>
@@ -59,11 +71,10 @@ export default function NINVerifyPage() {
               </p>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">{m.desc}</p>
             </div>
-          </Link>
+          </button>
         ))}
       </div>
 
-      {/* History shown here — under NIN Verification, not under each method */}
       <ServiceHistory
         serviceSlug={['nin-verification', 'nin-verification-vnin']}
         title="NIN Verification History"
